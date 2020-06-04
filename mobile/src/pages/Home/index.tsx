@@ -1,9 +1,82 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Feather as Icon } from '@expo/vector-icons';
-import { View, ImageBackground, StyleSheet, Image, Text } from 'react-native';
+import {
+  View,
+  ImageBackground,
+  StyleSheet,
+  Image,
+  Text,
+  Alert,
+} from 'react-native';
 import { RectButton } from 'react-native-gesture-handler';
+import { useNavigation } from '@react-navigation/native';
+import PickerSelect from 'react-native-picker-select';
+import axios from 'axios';
+
+interface UFResponse {
+  sigla: string;
+}
+
+interface CityResponse {
+  nome: string;
+}
 
 const Home = () => {
+  const [ufs, setUfs] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+
+  const [selectedUf, setSelectedUF] = useState<string>('0');
+  const [selectedCity, setSelectedCity] = useState<string>('0');
+
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    axios
+      .get<UFResponse[]>(
+        'https://servicodados.ibge.gov.br/api/v1/localidades/estados'
+      )
+      .then((response) => {
+        const ufsInitials = response.data.map((uf) => uf.sigla).sort();
+        setUfs(ufsInitials);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (selectedUf !== '0') {
+      axios
+        .get<CityResponse[]>(
+          `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${selectedUf}/municipios`
+        )
+        .then((response) => {
+          const citiesNames = response.data.map((city) => city.nome).sort();
+          setCities(citiesNames);
+        });
+    }
+  }, [selectedUf]);
+
+  function handleSelectUf(uf: string) {
+    setSelectedUF(uf);
+    setSelectedCity('0');
+    setCities([]);
+  }
+
+  function handleSelectCity(city: string) {
+    setSelectedCity(city);
+  }
+
+  function handleNavigationToPoints() {
+    const city = selectedCity;
+    const uf = selectedUf;
+    if (city === '0' || uf === '0') {
+      Alert.alert(
+        'Atenção',
+        'Para prosseguir, primeiro selecione uma localidade.'
+      );
+    } else {
+      navigation.navigate('Points', { uf, city });
+    }
+  }
+
   return (
     <ImageBackground
       source={require('../../assets/home-background.png')}
@@ -18,9 +91,32 @@ const Home = () => {
         </Text>
       </View>
       <View style={styles.footer}>
-        <RectButton style={styles.button} onPress={() => {}}>
+        <PickerSelect
+          style={pickerSelectStyles}
+          placeholder={{
+            label: 'Escolha uma UF',
+            value: null,
+            key: '0',
+          }}
+          Icon={() => <Icon name="chevron-down" size={30} color="#777" />}
+          onValueChange={handleSelectUf}
+          items={ufs.map((uf) => ({ label: uf, value: uf }))}
+        />
+        <PickerSelect
+          style={pickerSelectStyles}
+          placeholder={{
+            label: 'Escolha uma cidade',
+            value: null,
+            key: '0',
+          }}
+          Icon={() => <Icon name="chevron-down" size={30} color="#777" />}
+          onValueChange={handleSelectCity}
+          items={cities.map((city) => ({ label: city, value: city }))}
+        />
+
+        <RectButton style={styles.button} onPress={handleNavigationToPoints}>
           <View style={styles.buttonIcon}>
-              <Icon name="arrow-right" color="#FFF" size={24} />
+            <Icon name="arrow-right" color="#fff" size={24} />
           </View>
           <Text style={styles.buttonText}>Entrar</Text>
         </RectButton>
@@ -29,11 +125,29 @@ const Home = () => {
   );
 };
 
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    height: 60,
+    backgroundColor: '#FFF',
+    marginBottom: 8,
+    color: '#777',
+  },
+  inputAndroid: {
+    height: 60,
+    backgroundColor: '#FFF',
+    marginBottom: 8,
+    color: '#777',
+  },
+  iconContainer: {
+    top: 15,
+    right: 10,
+  },
+});
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 32,
-    backgroundColor: '#f0f0f5',
   },
 
   main: {
@@ -61,15 +175,6 @@ const styles = StyleSheet.create({
   footer: {},
 
   select: {},
-
-  input: {
-    height: 60,
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    marginBottom: 8,
-    paddingHorizontal: 24,
-    fontSize: 16,
-  },
 
   button: {
     backgroundColor: '#34CB79',
