@@ -52,6 +52,11 @@ class PointsController {
   }
 
   async create(req: Request, res: Response) {
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'File upload required.' });
+    }
+
     const {
       name,
       email,
