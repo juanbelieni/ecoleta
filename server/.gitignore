@@ -1,2 +1,6 @@
 node_modules
 *.sqlite*
+uploads/*.svg
+uploads/*.png
+uploads/*.jpg
+uploads/*.jpeg

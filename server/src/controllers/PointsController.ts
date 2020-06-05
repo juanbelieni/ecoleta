@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, request } from 'express';
 import knex from '../database/connection';
 
 class PointsController {
@@ -17,7 +17,14 @@ class PointsController {
       .distinct()
       .select('points.*');
 
-    return res.json(points);
+    const host = req.hostname;
+
+    const serializedPoints = points.map((point) => ({
+      ...point,
+      image_url: `http://${host}:3333/uploads/${point.image}`,
+    }));
+
+    return res.json(serializedPoints);
   }
 
   async show(req: Request, res: Response) {
@@ -29,12 +36,19 @@ class PointsController {
       return res.status(400).json({ message: 'Point not found.' });
     }
 
+    const host = req.hostname;
+
+    const serializedPoint = {
+      ...point,
+      image_url: `http://${host}:3333/uploads/${point.image}`,
+    };
+
     const items = await knex('items')
       .join('point_items', 'items.id', '=', 'point_items.item_id')
       .where('point_items.point_id', id)
       .select('items.id', 'items.title');
 
-    return res.json({ ...point, items });
+    return res.json({ ...serializedPoint, items });
   }
 
   async create(req: Request, res: Response) {
@@ -52,7 +66,7 @@ class PointsController {
     const trx = await knex.transaction();
 
     const point = {
-      image: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=667&q=80',
+      image: req.file.filename,
       name,
       email,
       whatsapp,
