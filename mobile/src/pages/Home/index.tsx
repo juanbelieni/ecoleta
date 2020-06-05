@@ -131,12 +131,14 @@ const pickerSelectStyles = StyleSheet.create({
     backgroundColor: '#FFF',
     marginBottom: 8,
     color: '#777',
+    paddingRight: 30,
   },
   inputAndroid: {
     height: 60,
     backgroundColor: '#FFF',
     marginBottom: 8,
     color: '#777',
+    paddingRight: 30,
   },
   iconContainer: {
     top: 15,
