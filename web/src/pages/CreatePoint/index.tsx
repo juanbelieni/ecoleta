@@ -140,10 +140,14 @@ const Home = () => {
       data.append('image', selectedFile);
     }
 
-    await api.post('points', data);
+    try {
+      await api.post('points', data);
 
-    alert('Ponto de coleta criado');
-    history.push('/');
+      alert('Ponto de coleta criado.');
+      history.push('/');
+    } catch {
+      alert('Preencha corretamente todos os campos.')
+    }
   }
 
   return (
@@ -196,6 +200,7 @@ const Home = () => {
                 type="text"
                 name="whatsapp"
                 id="whatsapp"
+                pattern="[1-9][0-9]9[0-9]{8}"
                 onChange={handleInputChange}
                 required
               />
