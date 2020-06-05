@@ -156,7 +156,7 @@ const Home = () => {
         <img src={logo} alt="logo" />
         <Link to="/">
           <FiArrowLeft />
-          Votlar para home
+          Voltar para home
         </Link>
       </header>
       <form onSubmit={handleSubmit}>
